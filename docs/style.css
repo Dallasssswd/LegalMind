@@ -205,3 +205,12 @@ textarea, input, select { font-size:16px; } /* Prevent iPhone focus zoom */
   html { scroll-behavior:auto; }
   *, *::before, *::after { transition-duration:0s!important;animation-duration:0s!important; }
 }
+
+/* Keyboard users can bypass the navigation on any device. */
+.skip-link { position:absolute;top:-80px;left:12px;z-index:50;background:#54ff9a;color:#06140b;padding:10px 14px;border-radius:6px;font-weight:bold; }
+.skip-link:focus { top:12px; }
+@supports(padding:env(safe-area-inset-left)) {
+  @media(max-width:800px) {
+    header, main, footer {padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right));}
+  }
+}
