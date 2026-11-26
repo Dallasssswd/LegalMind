@@ -33,9 +33,10 @@ class WindowsSpeech:
                 pass
 
     def speak(self, text):
-        self.last_text = str(text or "")[:6000]
+        spoken_text = str(text or "")[:6000]
+        self.last_text = spoken_text
         self.stop()
-        if not self.enabled or not self.last_text or os.name != "nt":
+        if not self.enabled or not spoken_text or os.name != "nt":
             return
         try:
             process = subprocess.Popen(
@@ -52,7 +53,7 @@ class WindowsSpeech:
 
         def feed():
             try:
-                process.communicate(input=self.last_text.encode("utf-8"), timeout=120)
+                process.communicate(input=spoken_text.encode("utf-8"), timeout=120)
             except (OSError, subprocess.TimeoutExpired):
                 try:
                     process.kill()
