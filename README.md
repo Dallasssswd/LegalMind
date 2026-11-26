@@ -1,4 +1,4 @@
-# LegalMind v0.3.0
+# LegalMind v0.3.1
 
 Retro-terminal Windows desktop law simulation game, with AI-generated fictional scenarios and interactive courtroom hearings.
 
@@ -29,19 +29,27 @@ git pull origin main
 .\.venv\Scripts\python.exe main.py
 ```
 
-## Set up OpenAI
+## OpenAI key: temporary session-only entry
 
-**Do not reuse previously shared/exposed API keys: revoke and replace them.**
+**Revoke any previously exposed API key and create a new one.**
 
-1. Create a new secret key in the OpenAI API dashboard and ensure API billing is enabled if needed.
-2. Run `Copy-Item .env.example .env` in the project folder.
-3. Open the local `.env` and replace the placeholder with the new key.
-4. Restart LegalMind.
-5. Choose Scenario Challenges or Courtroom Simulator and click **Generate New Case**.
+1. Open LegalMind and choose **Settings / API Status**.
+2. Paste your new API key into the masked field.
+3. Click **USE KEY FOR THIS SESSION**.
+4. Return to the main menu and generate an AI case.
+5. To discard the session key early, use **FORGET SESSION KEY NOW**.
 
-The project uses the Responses API. The default model is `gpt-4.1-mini` and can be changed with the `LEGALMIND_MODEL` environment variable.
+The key is held only in Python process memory. It is **not** saved to `.env`, SQLite,
+or GitHub. When LegalMind closes, the key is no longer retained by the app;
+you will need to enter it again at the next launch. Python does not guarantee
+that all memory copies are securely erased, and API requests send the key to OpenAI
+to authenticate. The input box clears after you press the Use Key button.
 
-**Never commit `.env` or paste secrets into GitHub/chat.** The repository's Python `.gitignore` excludes `.env`.
+Existing `.env` files are no longer used for API credentials. Remove any secret
+from them if you previously configured the app that way. The model defaults to
+`gpt-4.1-mini` and is configurable through `LEGALMIND_MODEL`.
+
+API usage is billed separately from ChatGPT subscriptions.
 
 ## Persistence
 
