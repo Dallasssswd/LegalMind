@@ -1,4 +1,4 @@
-# LegalMind v0.3.1
+# LegalMind v0.4.0
 
 Retro-terminal Windows desktop law simulation game, with AI-generated fictional scenarios and interactive courtroom hearings.
 
@@ -28,6 +28,15 @@ git pull origin main
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe main.py
 ```
+
+## Free Windows text-to-speech
+
+Windows' built-in System.Speech voice engine reads new case facts, witness replies, and judge feedback aloud. There are **no voice API charges** and no additional Python libraries required. Text-to-speech works offline, although generating AI content still requires the OpenAI API and may incur API costs.
+
+- Open **Settings** to toggle voice on/off, test a voice, or stop playback.
+- On a case screen, use **Replay Last Audio** or **Stop Audio**.
+- The voice preference lasts only while the application is running.
+- The app does not save speech audio files. Narration relies on installed Windows voices and may sound robotic.
 
 ## OpenAI key: temporary session-only entry
 
