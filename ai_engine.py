@@ -2,10 +2,8 @@
 import json
 import os
 
-from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv()
 MODEL = os.getenv("LEGALMIND_MODEL", "gpt-4.1-mini")
 GUIDANCE = (
     "You are LegalMind, an educational fictional law game for teenagers. "
@@ -20,16 +18,35 @@ class AIError(Exception):
     pass
 
 
+# Session-only secret: not written to a file, database, or environment variable.
+_session_key = None
+
+
+def set_api_key(key):
+    """Keep the supplied API key only in this Python process's memory."""
+    global _session_key
+    value = key.strip()
+    if not value or not value.startswith("sk-"):
+        raise AIError("Enter a valid-looking OpenAI API key.")
+    _session_key = value
+
+
+def clear_api_key():
+    """Discard the session reference (Python cannot guarantee memory zeroization)."""
+    global _session_key
+    _session_key = None
+
+
 def ready():
-    key = os.getenv("OPENAI_API_KEY", "").strip()
-    return bool(key and not key.startswith("replace_with_"))
+    return _session_key is not None
 
 
 def ask(prompt):
-    if not ready():
-        raise AIError("Add a NEW API key to your local .env file first.")
+    key = _session_key
+    if not key:
+        raise AIError("Open Settings and enter your API key for this session.")
     try:
-        response = OpenAI(timeout=45.0, max_retries=1).responses.create(
+        response = OpenAI(api_key=key, timeout=45.0, max_retries=1).responses.create(
             model=MODEL, instructions=GUIDANCE, input=prompt,
             max_output_tokens=1100, store=False,
         )
