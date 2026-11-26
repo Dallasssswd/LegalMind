@@ -19,6 +19,12 @@ The web edition provides AI scenario challenges, courtroom witness questions, AI
 
 **Security:** This is a *localhost-only development web app*, not a deployed public website. Do not expose the Flask development server to the internet. Public hosting requires HTTPS, production deployment, authentication and abuse protections. The OpenAI API can still incur usage charges. Revoke any earlier exposed keys.
 
+## GitHub Pages website (static demo)
+
+The `docs/` folder is ready for GitHub Pages. Configure **Settings → Pages → Deploy from a branch → main /docs**. When published, the expected address is `https://dallasssswd.github.io/LegalMind/`.
+
+**This is an offline practice demo** using sample cases and scripted witness responses. Live OpenAI features still require the separate Flask backend (not supported by GitHub Pages). The repository is currently private, so a GitHub Free account would need to make it public to use Pages; only change visibility if you're comfortable publishing the code. See [docs/README.md](docs/README.md) for details.
+
 ## Game modes
 
 - **Scenario Challenges:** Select a jurisdiction, legal category, and difficulty. Generate a fictional case, write your analysis, and get AI feedback and a 0–100 educational score.
