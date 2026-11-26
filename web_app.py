@@ -5,7 +5,7 @@ from flask import Flask, jsonify, render_template, request
 from openai import OpenAI
 from ai_engine import GUIDANCE
 
-app = Flask(__name__, template_folder="web_templates", static_folder="web_static")
+app = Flask(__name__, template_folder="web_templates", static_folder="web_static", static_url_path="/static")
 app.config["MAX_CONTENT_LENGTH"] = 32000
 MODEL = os.getenv("LEGALMIND_MODEL", "gpt-4.1-mini")
 CATEGORIES = {"Constitutional Law", "Criminal Law", "Cyber Law", "Civil Law", "Business Law"}
