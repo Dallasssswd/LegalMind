@@ -3,6 +3,7 @@ import threading
 import customtkinter as ctk
 from ai_engine import AIError, ready, case, grade, witness_reply, set_api_key, clear_api_key
 from database import Database
+from speech import WindowsSpeech
 
 BG = "#080e09"
 PANEL = "#101b12"
@@ -16,18 +17,30 @@ ctk.set_default_color_theme("green")
 class LegalMind(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("LegalMind | v0.3.1")
+        self.title("LegalMind | v0.4.0")
         self.geometry("1050x760")
         self.minsize(820, 620)
         self.configure(fg_color=BG)
         self.db = Database()
+        self.speech = WindowsSpeech()
+        self.protocol('WM_DELETE_WINDOW', self.close_app)
         self.case_data = None
         self.transcript = []
         self.view_id = 0
         self.busy = False
         self.render_menu()
 
+    def close_app(self):
+        self.speech.stop()
+        self.destroy()
+
+    def toggle_voice(self):
+        self.speech.enabled = not self.speech.enabled
+        if not self.speech.enabled:
+            self.speech.stop()
+
     def clear(self):
+        self.speech.stop()
         self.view_id += 1
         for widget in self.winfo_children():
             widget.destroy()
@@ -54,7 +67,7 @@ class LegalMind(ctk.CTk):
         return panel
 
     def render_menu(self):
-        p = self.screen("LEGALMIND", "LEGAL SIMULATION SYSTEM // v0.3.1")
+        p = self.screen("LEGALMIND", "LEGAL SIMULATION SYSTEM // v0.4.0")
         stats = self.db.get_stats()
         self.label(p, "[ OK ] SYSTEM INITIALIZED", 16).pack(pady=10)
         self.label(p, f"RANK: {stats['rank']} | XP: {stats['xp']} | COMPLETED: {stats['cases']}",
@@ -65,7 +78,7 @@ class LegalMind(ctk.CTk):
             ("03 > CAREER MODE", self.career),
             ("04 > CASE ARCHIVES", self.archives),
             ("05 > SETTINGS / API STATUS", self.settings),
-            ("06 > EXIT SYSTEM", self.destroy),
+            ("06 > EXIT SYSTEM", self.close_app),
         ):
             self.button(p, name, action, 520).pack(pady=7)
         self.label(p, "root@legalmind:~$ _", 13).pack(pady=15)
@@ -143,12 +156,15 @@ class LegalMind(ctk.CTk):
         for widget in self.case_panel.winfo_children():
             widget.destroy()
         self.status.configure(text="[ SUCCESS ] Case generated. Analyze the facts.")
+        self.speech.speak("New case. " + data["title"] + ". " + data["facts"] + ". " + data["question"])
         self.label(self.case_panel, data["title"].upper(), 23, GREEN,
                    wraplength=760).pack(pady=(6, 10))
         self.label(self.case_panel, data["facts"], 15, DIM, wraplength=750,
                    justify="left").pack(pady=8)
         self.label(self.case_panel, "LEGAL QUESTION: " + data["question"], 15,
                    GREEN, wraplength=750, justify="left").pack(pady=8)
+        self.button(self.case_panel, "REPLAY LAST AUDIO", self.speech.replay, 250).pack(pady=5)
+        self.button(self.case_panel, "STOP AUDIO", self.speech.stop, 250).pack(pady=5)
 
         if self.mode == "courtroom":
             self.label(self.case_panel,
@@ -209,6 +225,7 @@ class LegalMind(ctk.CTk):
         self.log.configure(state="disabled")
         self.question_entry.delete(0, "end")
         self.status.configure(text="[ READY ] Witness answered. Continue or submit.")
+        self.speech.speak(reply)
 
     def submit_argument(self):
         if self.busy or not self.case_data or self.submit_button.cget("state") == "disabled":
@@ -240,6 +257,7 @@ class LegalMind(ctk.CTk):
         self.submit_button.configure(state="disabled")
         self.answer.configure(state="disabled")
         self.status.configure(text="[ SAVED ] Results stored in your local case archive.")
+        self.speech.speak("Judge evaluation. Your score is " + str(score) + " out of 100. " + result["feedback"] + " " + result["improvement"])
 
     def career(self):
         p = self.screen("CAREER MODE", "PLAYER DOSSIER")
@@ -304,6 +322,28 @@ class LegalMind(ctk.CTk):
 
         self.button(p, "USE KEY FOR THIS SESSION", use_key).pack(pady=7)
         self.button(p, "FORGET SESSION KEY NOW", forget_key).pack(pady=7)
+        self.label(p, "WINDOWS VOICE NARRATION // FREE", 15, GREEN).pack(pady=(28, 8))
+        self.voice_status = self.label(
+            p, "Voice: ON" if self.speech.enabled else "Voice: MUTED",
+            14, DIM
+        )
+        self.voice_status.pack(pady=5)
+
+        def change_voice():
+            self.toggle_voice()
+            self.voice_status.configure(
+                text="Voice: ON" if self.speech.enabled else "Voice: MUTED"
+            )
+
+        self.button(p, "TOGGLE VOICE ON / OFF", change_voice).pack(pady=6)
+        self.button(p, "TEST WINDOWS VOICE",
+                    lambda: self.speech.speak("LegalMind voice narration is ready.")).pack(pady=6)
+        self.button(p, "STOP SPEAKING", self.speech.stop).pack(pady=6)
+        self.label(
+            p, "Uses your Windows speech voices. No voice API key, internet connection, "
+            "or additional voice service fees required. Audio is not saved.",
+            13, DIM, wraplength=740
+        ).pack(pady=8)
         self.label(
             p, "Your key is sent directly to OpenAI only when you use AI features.\n"
             "It is not written to .env, SQLite, or GitHub.\n"
