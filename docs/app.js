@@ -1,6 +1,7 @@
 'use strict';
-// Key is intentionally only in this page's memory, never browser storage.
+// Public GitHub Pages practice game: no API keys and no external API calls.
 let voice=true,lastSpeech='',currentCase=null,transcript=[],mode='scenario',busy=false;
+const speechAvailable='speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 const main=document.getElementById('main'),notice=document.getElementById('notice');
 const el=id=>document.getElementById(id);
 const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -8,9 +9,29 @@ const header=(a,b)=>'<h1>'+escapeHTML(a)+'</h1><p>'+escapeHTML(b)+'</p>';
 function getData(){try{const x=JSON.parse(localStorage.getItem('legalmind_web_progress')||'null');return x&&Array.isArray(x.cases)?x.cases:[]}catch{return []}}
 function addData(item){const entries=getData();entries.unshift(item);try{localStorage.setItem('legalmind_web_progress',JSON.stringify({cases:entries.slice(0,50)}));}catch{notice.textContent='Unable to store progress locally'}}
 function stats(){const entries=getData(),xp=entries.reduce((n,x)=>n+(Number(x.xp)||0),0);return {cases:entries.length,xp,rank:xp>=500?'SENIOR ATTORNEY':xp>=150?'ATTORNEY':'LAW STUDENT'}}
-function stopVoice(){if('speechSynthesis' in window)window.speechSynthesis.cancel()}
-function speak(text){lastSpeech=String(text||'').slice(0,6000);stopVoice();if(!voice||!('speechSynthesis' in window)||!lastSpeech)return;const u=new SpeechSynthesisUtterance(lastSpeech);u.rate=.94;window.speechSynthesis.speak(u)}
-function page(p){if(busy)return;stopVoice();document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));if(p==='home')return home();if(p==='settings')return settings();if(p==='career')return career();if(p==='archives')return archives();mode=p;play()}
+function stopVoice(){if(speechAvailable)window.speechSynthesis.cancel()}
+function speak(text){
+ lastSpeech=String(text||'').slice(0,6000);stopVoice();
+ if(!voice||!speechAvailable||!lastSpeech)return;
+ const u=new SpeechSynthesisUtterance(lastSpeech);u.rate=.94;
+ try{window.speechSynthesis.speak(u)}catch{notice.textContent='[ INFO ] Speech is unavailable in this browser'}
+}
+function page(p){
+ if(busy)return;
+ stopVoice();
+ document.querySelectorAll('nav button').forEach(b=>{
+   const selected=b.dataset.page===p;
+   b.classList.toggle('active',selected);
+   if(selected)b.setAttribute('aria-current','page');
+   else b.removeAttribute('aria-current');
+ });
+ if(p==='home')home();
+ else if(p==='settings')settings();
+ else if(p==='career')career();
+ else if(p==='archives')archives();
+ else {mode=p;play()}
+ window.scrollTo({top:0,behavior:'instant'});
+}
 document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>page(b.dataset.page)));
 function home(){const x=stats();main.innerHTML=header('LEGALMIND','GITHUB PAGES PRACTICE DEMO // v0.6')+
 '<div class="panel"><p>[ OK ] SYSTEM INITIALIZED</p><h2>WELCOME, COUNSEL</h2>'+
@@ -23,7 +44,7 @@ function settings(){
  '<p>Live AI case generation and witness replies require deploying a separate secure Python backend. Never put an OpenAI key in publicly hosted JavaScript or a GitHub repository.</p></section>'+
  '<section class="panel"><h2>FREE TEXT-TO-SPEECH</h2><p>Uses voices built into your browser and operating system.</p>'+
  '<button id="togglevoice">'+(voice?'MUTE VOICE':'ENABLE VOICE')+'</button> '+
- '<button id="testvoice">TEST VOICE</button> <button id="stopvoice">STOP SPEAKING</button></section>';
+ '<button id="testvoice">TEST VOICE</button> <button id="stopvoice">STOP SPEAKING</button>'+(speechAvailable?'':'<p class="alert">Speech playback is not supported in this browser. The text game still works.</p>')+'</section>';
  el('togglevoice').onclick=()=>{voice=!voice;stopVoice();el('togglevoice').textContent=voice?'MUTE VOICE':'ENABLE VOICE'};
  el('testvoice').onclick=()=>speak('LegalMind practice mode is ready.');
  el('stopvoice').onclick=stopVoice;
@@ -63,7 +84,7 @@ async function api(action,payload){
  }
  throw Error('Unknown demo action');
 }
-async function task(run){if(busy)return;busy=true;notice.textContent='[ WORKING ] CONTACTING AI...';
+async function task(run){if(busy)return;busy=true;notice.textContent='[ WORKING ] PREPARING PRACTICE RESPONSE...';
 document.querySelectorAll('main button').forEach(b=>b.disabled=true);
 try{await run();notice.textContent='[ OK ] READY'}catch(e){notice.textContent='[ ERROR ] '+e.message;const box=el('error');if(box)box.textContent='[ ERROR ] '+e.message}
 finally{busy=false;document.querySelectorAll('main button').forEach(b=>b.disabled=false);
@@ -78,7 +99,7 @@ main.innerHTML=header(mode==='courtroom'?'COURTROOM SIMULATOR':'SCENARIO CHALLEN
 '<div><label for="difficulty">DIFFICULTY</label><select id="difficulty">'+
 ['Easy','Medium','Hard','Expert'].map(x=>'<option'+(x==='Medium'?' selected':'')+'>'+x+'</option>').join('')+'</select></div></div>'+
 '<button id="generate" class="action">GENERATE NEW CASE</button><p id="error" class="alert"></p></section><div id="casearea"></div>';
-el('generate').onclick=()=>task(async()=>{const c=await api('case',{mode,jurisdiction:el('jurisdiction').value,category:el('category').value,difficulty:el('difficulty').value});currentCase=c;transcript=[];showCase();speak(c.title+'. '+c.facts+'. '+c.question)})}
+el('generate').onclick=()=>task(async()=>{const c=await api('case',{mode,jurisdiction:el('jurisdiction').value,category:el('category').value,difficulty:el('difficulty').value});currentCase=c;transcript=[];showCase();el('casearea').scrollIntoView({block:'start'});speak(c.title+'. '+c.facts+'. '+c.question)})}
 function showCase(){const c=currentCase,isCourt=mode==='courtroom';
 el('casearea').innerHTML='<section class="panel"><p class="caption">'+escapeHTML(c.jurisdiction)+' / '+escapeHTML(c.category)+' / '+escapeHTML(c.difficulty)+'</p>'+
 '<h2>'+escapeHTML(c.title)+'</h2><p class="casefacts">'+escapeHTML(c.facts)+'</p><p>LEGAL QUESTION: '+escapeHTML(c.question)+'</p>'+
@@ -99,5 +120,6 @@ el('submit').onclick=()=>task(async()=>{const argument=el('argument').value.trim
 const x=await api('grade',{case:currentCase,transcript,argument});const xp=Math.max(5,Math.floor(x.score/5));
 el('result').textContent='DEMO CHECKLIST SCORE: '+x.score+'/100 | +'+xp+' XP\n\nPRACTICE FEEDBACK: '+x.feedback+'\n\nSTRENGTH: '+x.strength+'\n\nTO IMPROVE: '+x.improvement;
 el('argument').disabled=true;addData({title:c.title,mode,date:new Date().toLocaleString(),score:x.score,xp,argument,feedback:x.feedback+'\n'+x.improvement});
+el('result').scrollIntoView({block:'nearest'});
 speak('Your score is '+x.score+' out of one hundred. '+x.feedback+' '+x.improvement)})}
 page('home');
