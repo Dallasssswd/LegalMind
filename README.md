@@ -1,6 +1,23 @@
-# LegalMind v0.4.0
+# LegalMind v0.5.0 — Desktop + Web
 
-Retro-terminal Windows desktop law simulation game, with AI-generated fictional scenarios and interactive courtroom hearings.
+Retro-terminal legal simulation game with **Windows desktop** and **local browser web** versions. Both feature AI-generated fictional legal scenarios and interactive courtroom hearings.
+
+## Web edition (new in v0.5.0)
+
+The Windows app remains available and unchanged. To run the browser edition on your Windows computer:
+
+```powershell
+cd "$HOME\LegalMind-GitHub"
+git pull origin main
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe web_app.py
+```
+
+Then open **http://127.0.0.1:5050** in your browser. Keep the terminal running; press Ctrl+C to stop.
+
+The web edition provides AI scenario challenges, courtroom witness questions, AI grading, career XP, saved case archives, and **free browser text-to-speech**. Enter your OpenAI key in Settings; the key remains only in browser page memory, is sent to the local Flask backend with each AI request, and isn't written to disk. Closing or refreshing the page clears it. Case history/XP is separately stored in that browser's localStorage (not synchronized with desktop saves).
+
+**Security:** This is a *localhost-only development web app*, not a deployed public website. Do not expose the Flask development server to the internet. Public hosting requires HTTPS, production deployment, authentication and abuse protections. The OpenAI API can still incur usage charges. Revoke any earlier exposed keys.
 
 ## Game modes
 
