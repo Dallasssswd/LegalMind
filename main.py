@@ -1,7 +1,7 @@
 """LegalMind v0.3: AI-powered scenarios and courtroom simulator."""
 import threading
 import customtkinter as ctk
-from ai_engine import AIError, ready, case, grade, witness_reply
+from ai_engine import AIError, ready, case, grade, witness_reply, set_api_key, clear_api_key
 from database import Database
 
 BG = "#080e09"
@@ -16,7 +16,7 @@ ctk.set_default_color_theme("green")
 class LegalMind(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("LegalMind | v0.3.0")
+        self.title("LegalMind | v0.3.1")
         self.geometry("1050x760")
         self.minsize(820, 620)
         self.configure(fg_color=BG)
@@ -54,7 +54,7 @@ class LegalMind(ctk.CTk):
         return panel
 
     def render_menu(self):
-        p = self.screen("LEGALMIND", "LEGAL SIMULATION SYSTEM // v0.3.0")
+        p = self.screen("LEGALMIND", "LEGAL SIMULATION SYSTEM // v0.3.1")
         stats = self.db.get_stats()
         self.label(p, "[ OK ] SYSTEM INITIALIZED", 16).pack(pady=10)
         self.label(p, f"RANK: {stats['rank']} | XP: {stats['xp']} | COMPLETED: {stats['cases']}",
@@ -121,7 +121,7 @@ class LegalMind(ctk.CTk):
         self.button(p, "GENERATE NEW CASE", self.generate).pack(pady=9)
         self.status = self.label(p,
             "[ READY ] Generate a case to begin." if ready()
-            else "[ OFFLINE ] Configure your API key in .env first.", 13, DIM,
+            else "[ OFFLINE ] Go to Settings and enter your API key for this session.", 13, DIM,
             wraplength=760)
         self.status.pack(pady=8)
         self.case_panel = ctk.CTkFrame(p, fg_color=BG)
@@ -269,20 +269,50 @@ class LegalMind(ctk.CTk):
         viewer.configure(state="disabled")
 
     def settings(self):
-        p = self.screen("SYSTEM SETTINGS", "OPENAI CONNECTION STATUS")
-        message = (
-            "[ CONFIGURED ] An API key was found in the local environment.\n"
-            "To test it, generate a case. API requests may incur charges."
-            if ready() else
-            "[ OFFLINE ] A valid API key has not been configured.\n"
-            "Copy .env.example to .env, add a NEW key, then restart LegalMind."
+        p = self.screen("SYSTEM SETTINGS", "OPENAI API // SESSION-ONLY ACCESS")
+        self.label(
+            p, "[ CONNECTED ] Key is available for this session." if ready()
+            else "[ OFFLINE ] Enter an API key to enable AI gameplay.",
+            16, GREEN, wraplength=740
+        ).pack(pady=(22, 12))
+        self.label(p, "OPENAI API KEY (HIDDEN)", 13, DIM).pack(pady=6)
+        entry = ctk.CTkEntry(
+            p, width=600, height=42, show="*",
+            placeholder_text="Paste a newly created sk-... key here"
         )
-        self.label(p, message, 16, GREEN, wraplength=740).pack(pady=30)
-        self.label(p,
-            "NEVER upload .env or your key to GitHub.\n"
-            "Previous exposed API keys should be revoked.\n"
-            "AI-generated legal analysis can be mistaken; verify authoritative sources.",
-            14, DIM, wraplength=740).pack(pady=15)
+        entry.pack(pady=8)
+        status = self.label(p, "The key is not saved to any file or database.",
+                            13, DIM, wraplength=740)
+        status.pack(pady=8)
+
+        def use_key():
+            try:
+                set_api_key(entry.get())
+            except AIError as exc:
+                status.configure(text="[ ERROR ] " + str(exc))
+            else:
+                # Remove the key from the input widget after storing it in session memory.
+                entry.delete(0, "end")
+                status.configure(text="[ READY ] API key loaded into temporary memory. "
+                                      "It disappears when the app exits. "
+                                      "Generate a case to test the connection.")
+
+        def forget_key():
+            clear_api_key()
+            entry.delete(0, "end")
+            status.configure(text="[ CLEARED ] Session key reference discarded.")
+
+        self.button(p, "USE KEY FOR THIS SESSION", use_key).pack(pady=7)
+        self.button(p, "FORGET SESSION KEY NOW", forget_key).pack(pady=7)
+        self.label(
+            p, "Your key is sent directly to OpenAI only when you use AI features.\n"
+            "It is not written to .env, SQLite, or GitHub.\n"
+            "Closing LegalMind ends the session; enter the key again next time.\n"
+            "Avoid screen sharing or screenshots while entering a key.\n"
+            "Python cannot guarantee secure erasure of copies from process memory.\n"
+            "Revoke any earlier API key that was exposed. API requests may incur charges.",
+            13, DIM, wraplength=740
+        ).pack(pady=25)
 
 
 if __name__ == "__main__":
