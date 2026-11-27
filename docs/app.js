@@ -1,11 +1,8 @@
 'use strict';
-// Live AI uses the separately hosted HTTPS gateway. API keys remain in this tab's memory.
+// Standalone static game: no gateway, API keys or external network calls.
 let voice=true,lastSpeech='',currentCase=null,transcript=[],mode='scenario',busy=false;
-let apiKey='', gatewayUrl=String(window.LEGALMIND_GATEWAY_URL||'').trim();
 const speechAvailable='speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 const main=document.getElementById('main'),notice=document.getElementById('notice');
-function connectionStatus(){document.getElementById('online').textContent=apiKey&&gatewayUrl?'● AI READY':'● SETUP REQUIRED'}
-connectionStatus();
 const el=id=>document.getElementById(id);
 const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const header=(a,b)=>'<h1>'+escapeHTML(a)+'</h1><p>'+escapeHTML(b)+'</p>';
@@ -36,78 +33,65 @@ function page(p){
  window.scrollTo({top:0,behavior:'instant'});
 }
 document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>page(b.dataset.page)));
-function home(){const x=stats();main.innerHTML=header('LEGALMIND','AI LEGAL SIMULATION // v1.0')+
+function home(){const x=stats();main.innerHTML=header('LEGALMIND','LEGAL REASONING PRACTICE // v1.1')+
 '<div class="panel"><p>[ OK ] SYSTEM INITIALIZED</p><h2>WELCOME, COUNSEL</h2>'+
 '<p>RANK: '+escapeHTML(x.rank)+' | XP: '+x.xp+' | CASES: '+x.cases+'</p>'+
-'<p>Create new AI-generated legal cases, question witnesses and receive feedback using your own OpenAI API key. Setup is required in Settings.</p>'+
+'<p>Play fictional legal challenges with built-in cases, scripted witness answers and practice feedback. No setup or API key needed.</p>'+
 '<button id="start">> BEGIN SCENARIO</button></div>';el('start').onclick=()=>page('scenario')}
 function settings(){
-  main.innerHTML=header('SETTINGS','PRIVATE SESSION KEY / SECURE HTTPS GATEWAY')+
-   '<section class="panel"><h2>CONNECT LEGALMIND TO AI</h2>'+
-   '<p>LegalMind needs a deployed HTTPS API gateway to work on GitHub Pages. Your OpenAI key stays in browser memory until refresh or closing the tab, and is sent to the gateway for each request. Only use a gateway you trust.</p>'+
-   '<label for="gateway">GATEWAY URL (FROM THE REPOSITORY OWNER)</label>'+
-   '<input id="gateway" type="url" placeholder="https://legalmind-gateway.example.workers.dev" autocomplete="off" spellcheck="false">'+
-   '<label for="key">YOUR OPENAI API KEY</label>'+
-   '<input id="key" type="password" maxlength="512" placeholder="sk-..." autocomplete="off" spellcheck="false">'+
-   '<div class="row"><button id="usekey">CONNECT FOR THIS SESSION</button><button id="forget">DISCONNECT / CLEAR KEY</button></div>'+
-   '<p id="connectionmsg" role="status" class="muted"></p>'+
-   '<p class="tiny">Neither your key nor your gateway URL is stored in browser storage. OpenAI API usage is billed separately from ChatGPT. Never paste your key into a site you do not trust. A browser extension or compromised site could still access it.</p></section>'+
-   '<section class="panel"><h2>FREE VOICE NARRATION</h2>'+
-   '<button id="togglevoice">'+(voice?'MUTE VOICE':'ENABLE VOICE')+'</button> '+
-   '<button id="testvoice">TEST VOICE</button> <button id="stopvoice">STOP SPEAKING</button>'+
-   (speechAvailable?'':'<p class="alert">Your browser does not support speech playback; text features still work.</p>')+
-   '</section>';
-  el('gateway').value=gatewayUrl;
-  el('connectionmsg').textContent=apiKey&&gatewayUrl?'[ CONNECTED ] Key and gateway selected for this session.':'[ OFFLINE ] Enter both fields to connect.';
-  el('usekey').onclick=()=>{
-    const nextUrl=el('gateway').value.trim().replace(/\/+$/,'');
-    const nextKey=el('key').value.trim();
-    let parsed;
-    try{parsed=new URL(nextUrl)}catch{el('connectionmsg').textContent='[ ERROR ] Enter a valid HTTPS gateway URL.';return}
-    if(parsed.protocol!=='https:'||parsed.username||parsed.password||parsed.search||parsed.hash||parsed.pathname!=='/'||!parsed.hostname.endsWith('.workers.dev')){
-      el('connectionmsg').textContent='[ ERROR ] Use the trusted Cloudflare Worker HTTPS root URL ending in .workers.dev.';return;
-    }
-    if(!nextKey.startsWith('sk-')||nextKey.length>512){
-      el('connectionmsg').textContent='[ ERROR ] Enter your own valid-looking OpenAI key.';return;
-    }
-    gatewayUrl=nextUrl;apiKey=nextKey;el('key').value='';connectionStatus();
-    el('connectionmsg').textContent='[ READY ] Session connected. Generate a case to verify API access.';
-  };
-  el('forget').onclick=()=>{apiKey='';el('key').value='';connectionStatus();el('connectionmsg').textContent='[ CLEARED ] Key discarded.'};
-  el('togglevoice').onclick=()=>{voice=!voice;stopVoice();el('togglevoice').textContent=voice?'MUTE VOICE':'ENABLE VOICE'};
-  el('testvoice').onclick=()=>speak('LegalMind voice is ready.');
-  el('stopvoice').onclick=stopVoice;
+ main.innerHTML=header('SETTINGS','NO SETUP / FREE BROWSER VOICE')+
+ '<section class="panel"><h2>NO-SETUP GAME MODE</h2><p>This game runs entirely in your browser. No account, API key, gateway or extra setup is needed.</p>'+
+ '<p>Cases and witness answers are built in rather than generated by live AI. Your Windows app still has optional AI features.</p></section>'+
+ '<section class="panel"><h2>FREE TEXT-TO-SPEECH</h2><p>Uses voices built into your browser and operating system.</p>'+
+ '<button id="togglevoice">'+(voice?'MUTE VOICE':'ENABLE VOICE')+'</button> '+
+ '<button id="testvoice">TEST VOICE</button> <button id="stopvoice">STOP SPEAKING</button>'+(speechAvailable?'':'<p class="alert">Speech playback is not supported in this browser. The text game still works.</p>')+'</section>';
+ el('togglevoice').onclick=()=>{voice=!voice;stopVoice();el('togglevoice').textContent=voice?'MUTE VOICE':'ENABLE VOICE'};
+ el('testvoice').onclick=()=>speak('LegalMind practice mode is ready.');
+ el('stopvoice').onclick=stopVoice;
 }
 function career(){const x=stats();main.innerHTML=header('CAREER','PLAYER DOSSIER')+
 '<section class="panel"><h2>'+escapeHTML(x.rank)+'</h2><p>XP: '+x.xp+'<br>Cases completed: '+x.cases+'</p>'+
 '<p>Law Student → Attorney at 150 XP → Senior Attorney at 500 XP.</p></section>'}
-function archives(){const entries=getData();main.innerHTML=header('CASE ARCHIVES','Saved only in this browser (no cross-device sync)')+
+function archives(){const entries=getData();main.innerHTML=header('CASE ARCHIVES','Saved in this browser only')+
 (entries.length?entries.map(x=>'<section class="panel"><h2>'+escapeHTML(x.title)+'</h2><p>'+escapeHTML(x.date)+' • '+escapeHTML(x.mode)+' • '+Number(x.score)+'/100 • +'+Number(x.xp)+' XP</p>'+
 '<p>YOUR ARGUMENT</p><p class="casefacts">'+escapeHTML(x.argument)+'</p><p>AI FEEDBACK</p><p class="casefacts">'+escapeHTML(x.feedback)+'</p></section>').join(''):'<p>[ EMPTY ] No completed cases yet.</p>')}
+const DEMO_CASES=[
+ {title:'The School Locker Search',facts:'During a school day, an administrator receives a report that a student may be carrying a missing school tablet. Without asking the student, the administrator opens the student’s assigned locker. The school handbook says lockers are school property, but it is unclear whether students were told searches could occur. The administrator finds a tablet similar to the missing one, but its ownership has not been confirmed.',question:'What facts matter when deciding whether the locker search was reasonable, and what arguments could each side raise?',witness_name:'School administrator',witness_background:'A school official who received the report.'},
+ {title:'The Community Photo Dispute',facts:'A student photographs a public outdoor community event. A local business reposts one of the photos in an online advertisement without asking permission. The student posted the original image on a public social media page. The business says publicly visible photographs are free to reuse. No written license or agreement is known.',question:'What issues about copyright ownership, permission and potential defenses should be explored?',witness_name:'Business manager',witness_background:'The person who approved the advertisement.'},
+ {title:'The Rental Agreement Question',facts:'A tenant and a landlord disagree over a repair requested by email. The lease mentions maintenance duties but does not clearly cover this issue. The tenant says the repair is urgent; the landlord says the tenant caused the problem. Both agree that the property is in the selected jurisdiction, but neither has provided photographs or an inspection report.',question:'What facts and legal obligations should be examined before drawing a conclusion?',witness_name:'Property manager',witness_background:'The person responsible for maintenance requests.'}
+];
+let caseIndex=0;
 async function api(action,payload){
-  if(!apiKey||!gatewayUrl)throw Error('Open Settings and connect your own API key and trusted gateway.');
-  if(!['case','witness','grade'].includes(action))throw Error('Unknown action');
-  let response;
-  try{
-    response=await fetch(gatewayUrl+'/api/'+action,{
-      method:'POST',mode:'cors',credentials:'omit',cache:'no-store',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({...payload,api_key:apiKey})
-    });
-  }catch{throw Error('Cannot connect to the gateway. Check its HTTPS address and deployment.')}
-  let data;
-  try{data=await response.json()}catch{throw Error('Gateway returned an unexpected response.')}
-  if(!response.ok)throw Error(String(data.error||'AI request failed.').slice(0,180));
-  return data;
+ if(action==='case'){
+   const base=DEMO_CASES[caseIndex++%DEMO_CASES.length];
+   return {...base,jurisdiction:payload.jurisdiction,category:payload.category,difficulty:payload.difficulty,mode:payload.mode};
+ }
+ if(action==='witness'){
+   const q=String(payload.question||'').toLowerCase();
+   let reply='I can only explain what I personally observed. I do not know every relevant fact.';
+   if(q.includes('when')||q.includes('time'))reply='I remember the general sequence of events, but I do not have an exact time in front of me.';
+   else if(q.includes('permission')||q.includes('consent'))reply='I cannot confirm that explicit permission was given. You would need to check the relevant records.';
+   else if(q.includes('why')||q.includes('reason'))reply='I acted on the information available to me at the time, but I understand that details could affect the evaluation.';
+   return {reply};
+ }
+ if(action==='grade'){
+   // This is a transparent practice heuristic, NOT an AI assessment of legal accuracy.
+   const words=String(payload.argument||'').trim().split(/\s+/).length;
+   const mentionsUncertainty=/however|although|depends|uncertain|missing|more facts|on the other hand|could|might/i.test(payload.argument);
+   const mentionsRule=/rule|law|amendment|rights|privacy|evidence|consent|permission|agreement|copyright|reasonable/i.test(payload.argument);
+   const score=Math.min(85,Math.max(35,35+Math.min(25,Math.floor(words/3))+(mentionsUncertainty?15:0)+(mentionsRule?10:0)));
+   return {score,feedback:'PRACTICE CHECKLIST SCORE ONLY: Your response was reviewed with a simple completeness checklist, not a legal reasoning model. Consider both sides and identify unknown facts.',strength:'You completed a written response to the fictional case.',improvement:'Identify a relevant legal rule, explain how each known fact relates to it, and say which missing facts could change the outcome.'};
+ }
+ throw Error('Unknown demo action');
 }
-async function task(run){if(busy)return;busy=true;notice.textContent='[ WORKING ] CONTACTING AI...';
+async function task(run){if(busy)return;busy=true;notice.textContent='[ WORKING ] PREPARING CASE...';
 document.querySelectorAll('main button').forEach(b=>b.disabled=true);
 try{await run();notice.textContent='[ OK ] READY'}catch(e){notice.textContent='[ ERROR ] '+e.message;const box=el('error');if(box)box.textContent='[ ERROR ] '+e.message}
 finally{busy=false;document.querySelectorAll('main button').forEach(b=>b.disabled=false);
 if(el('argument')&&el('argument').disabled&&el('submit'))el('submit').disabled=true}}
 function play(){currentCase=null;transcript=[];
 main.innerHTML=header(mode==='courtroom'?'COURTROOM SIMULATOR':'SCENARIO CHALLENGE',
-'AI-GENERATED FICTIONAL CASES')+
+'FICTIONAL CASES // BUILT-IN PRACTICE MODE')+
 '<section class="panel"><div class="grid"><div><label for="jurisdiction">JURISDICTION</label><select id="jurisdiction">'+
 ['North Carolina','Federal (U.S.)','South Carolina','California','New York'].map(x=>'<option>'+x+'</option>').join('')+'</select></div>'+
 '<div><label for="category">LEGAL CATEGORY</label><select id="category">'+
@@ -126,7 +110,7 @@ el('casearea').innerHTML='<section class="panel"><p class="caption">'+escapeHTML
 '<button id="ask" class="action">QUESTION WITNESS</button></section>':'')+
 '<section class="panel"><h2>'+(isCourt?'CLOSING ARGUMENT':'YOUR LEGAL ANALYSIS')+'</h2>'+
 '<textarea id="argument" maxlength="5000" placeholder="Explain legal issues, facts, and uncertainties..."></textarea>'+
-'<button id="submit" class="action">'+(isCourt?'PRESENT ARGUMENT TO JUDGE':'SUBMIT ARGUMENT FOR AI EVALUATION')+'</button>'+
+'<button id="submit" class="action">'+(isCourt?'PRESENT ARGUMENT TO JUDGE':'SUBMIT FOR PRACTICE FEEDBACK')+'</button>'+
 '<p id="error" class="alert"></p><div id="result" class="result"></div></section>';
 el('replay').onclick=()=>speak(lastSpeech);el('stopspeech').onclick=stopVoice;
 if(isCourt)el('ask').onclick=()=>task(async()=>{const question=el('question').value.trim();if(question.length<5)throw Error('Please ask a full question');if(transcript.length>=12)throw Error('Six-question limit reached');
@@ -134,7 +118,7 @@ const x=await api('witness',{case:currentCase,transcript,question});transcript.p
 el('transcript').textContent+='\n\nYOU: '+question+'\nWITNESS: '+x.reply;el('question').value='';speak(x.reply)});
 el('submit').onclick=()=>task(async()=>{const argument=el('argument').value.trim();if(argument.length<25)throw Error('Write at least 25 characters of reasoning');
 const x=await api('grade',{case:currentCase,transcript,argument});const xp=Math.max(5,Math.floor(x.score/5));
-el('result').textContent='AI FEEDBACK SCORE: '+x.score+'/100 | +'+xp+' XP\n\nJUDGE FEEDBACK: '+x.feedback+'\n\nSTRENGTH: '+x.strength+'\n\nTO IMPROVE: '+x.improvement;
+el('result').textContent='PRACTICE CHECKLIST SCORE: '+x.score+'/100 | +'+xp+' XP\n\nPRACTICE FEEDBACK: '+x.feedback+'\n\nSTRENGTH: '+x.strength+'\n\nTO IMPROVE: '+x.improvement;
 el('argument').disabled=true;addData({title:c.title,mode,date:new Date().toLocaleString(),score:x.score,xp,argument,feedback:x.feedback+'\n'+x.improvement});
 el('result').scrollIntoView({block:'nearest'});
 speak('Your score is '+x.score+' out of one hundred. '+x.feedback+' '+x.improvement)})}
