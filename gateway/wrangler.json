@@ -1,0 +1,6 @@
+{
+  "name": "legalmind-gateway",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-26",
+  "workers_dev": true
+}
