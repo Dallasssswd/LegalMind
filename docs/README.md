@@ -1,22 +1,60 @@
-# LegalMind GitHub Pages (static demo)
+# LegalMind Web v1.0 — GitHub Pages
 
-This folder is a **GitHub Pages-compatible** version of LegalMind that runs entirely in a web browser. It uses the same retro theme and includes rotating fictional practice cases, scripted witness answers, a simple disclosed practice scoring checklist, career XP, case archives in browser localStorage, and free browser text-to-speech.
+The LegalMind website includes AI-generated legal scenarios, AI courtroom witnesses,
+AI argument evaluation, local browser career saves and free browser text-to-speech.
 
-**No live AI is available on GitHub Pages alone.** GitHub Pages cannot execute the Python Flask backend. Do **not** put an OpenAI API key in front-end source code or send a private key through a public untrusted service. Live AI needs a separately hosted, secured backend.
+This version is **bring your own OpenAI API key (BYOK)**. Every visitor uses
+their own OpenAI API key, for which OpenAI may charge usage. ChatGPT plans do not
+include API credit. Keys are held only in the current browser tab's JavaScript memory
+(not localStorage, cookies or the GitHub repository), and cleared on refresh/close.
+Cases and career history **are** stored in browser localStorage, and do not sync.
 
-## Publish
+## One-time site owner setup — REQUIRED for live AI
 
-1. Open the LegalMind repository on GitHub.
-2. Under **Settings → Pages**, choose **Deploy from a branch**.
-3. Choose branch **main** and folder **/docs**, then **Save**.
-4. The expected project-site address is `https://dallasssswd.github.io/LegalMind/` once GitHub confirms publication.
+GitHub Pages only hosts static content and cannot run API requests securely.
+You must deploy the small HTTPS gateway in the repository's `gateway/` directory.
 
-If your GitHub plan is Free, GitHub Pages requires a **public repository**. Your LegalMind repository was private when this folder was created. Do not change its visibility without checking that you are comfortable making the entire repository source public. Paid GitHub plans may offer Pages publication from private repositories, but the published website itself is public.
+1. Set up a Cloudflare account and Node.js.
+2. Download/clone this repository and open a terminal in its `gateway` folder.
+3. Run `npx wrangler login`, then `npx wrangler deploy`.
+4. Copy the deployed `https://<your-worker-name>.<your-subdomain>.workers.dev` URL.
+5. Edit `docs/config.js` and set
+   `window.LEGALMIND_GATEWAY_URL = 'https://<your-worker-name>.<your-subdomain>.workers.dev';`.
+6. Commit that config change; GitHub Pages will then display a prefilled gateway URL
+   in Settings. **The URL is public and is safe to commit; OpenAI API keys are not.**
+7. Ensure **Settings → Pages → Deploy from a branch → main /docs**.
 
-The main Windows and local Flask versions are still maintained separately. This demo's progress does not synchronize with those versions.
+Alternatively, players can enter a trusted `*.workers.dev` gateway URL manually
+in Settings without editing the repo.
 
-## Cross-device support
+## How players use LegalMind
 
-The static GitHub Pages practice version is designed for phone, tablet, laptop and desktop browsers. It includes responsive navigation, touch-friendly buttons, accessible focus states and mobile-friendly text input sizing. Speech uses the browser's speech synthesis support; if unavailable, the text game is still usable. Some mobile browsers require a tap on **Replay Last Audio** rather than autoplay.
+1. Open `https://dallasssswd.github.io/LegalMind/`.
+2. Choose **Settings**.
+3. Review the gateway URL and verify that it belongs to the site owner or another
+   operator you trust. Enter your own **new, unshared** OpenAI API key.
+4. Choose **CONNECT FOR THIS SESSION**.
+5. Return to Scenarios or Courtroom; play with AI-generated responses.
+6. Use **DISCONNECT / CLEAR KEY** to discard the current key reference.
 
-Progress is kept in that browser's localStorage, not synced between phones and computers. Private browsing or clearing site data may erase it. This is a non-AI sample-case demo; the live AI local Flask app is a separate project mode that cannot run on GitHub Pages alone. Browser and device testing is still recommended before calling every device fully supported.
+Keys are transmitted over HTTPS to the gateway and to OpenAI for each AI request.
+They are never persisted by this application's code, but can be exposed by
+malicious websites, modified Worker code, browser extensions or infrastructure
+outside the app's control. Do not share the API key in chat or on GitHub.
+Revoke any previously exposed keys.
+
+## Security and launch readiness
+
+This is application v1.0 **source code**, not a certified or audited production
+service. Before a large public launch, test the deployed gateway on mobile and
+desktop, add server-side rate limiting, monitoring, privacy policy, support and
+abuse handling. The origin check is not authentication and does not prevent
+non-browser callers from sending requests with their own credentials.
+
+Legal information is fictional and may be incorrect; this game is **not legal advice**.
+There is no live AI until a separately hosted gateway is deployed.
+
+## Browser compatibility
+
+The interface is responsive for desktop, tablets, Android and iOS; browser
+speech synthesis can vary. Progress is stored separately in each browser.
