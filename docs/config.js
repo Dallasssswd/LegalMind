@@ -1,2 +1,2 @@
-/* Public gateway URL only. Never put an OpenAI API key here. */
-window.LEGALMIND_GATEWAY_URL = '';
+/* Public Cloudflare Worker endpoint. Never put any OpenAI API key here. */
+window.LEGALMIND_GATEWAY_URL = 'https://legalmind.3newmans-dallas.workers.dev';
