@@ -1,4 +1,4 @@
-# LegalMind — Desktop, Local Web, and GitHub Pages v1
+# LegalMind — Windows, Local Web, and GitHub Pages
 
 Retro-terminal legal simulation game with **Windows desktop** and **local browser web** versions. Both feature AI-generated fictional legal scenarios and interactive courtroom hearings.
 
@@ -19,19 +19,16 @@ The web edition provides AI scenario challenges, courtroom witness questions, AI
 
 **Security:** This is a *localhost-only development web app*, not a deployed public website. Do not expose the Flask development server to the internet. Public hosting requires HTTPS, production deployment, authentication and abuse protections. The OpenAI API can still incur usage charges. Revoke any earlier exposed keys.
 
-## GitHub Pages website (v1.0 BYOK)
+## GitHub Pages website — no setup required
 
-The `docs/` folder now contains the **live AI** GitHub Pages frontend.
-Visitors can enter their own OpenAI API key in Settings for each browser tab.
-The key is not saved by LegalMind. Cases, witnesses and grading work only after
-an HTTPS Cloudflare Worker API gateway has been deployed. GitHub Pages itself
-cannot run the backend; the gateway code is included in `gateway/`.
+The `docs/` website is playable immediately at
+[LegalMind Web](https://dallasssswd.github.io/LegalMind/).
+It features built-in fictional scenarios, scripted courtroom witnesses, checklist
+practice feedback, free browser voice, and locally saved XP/archives. **No API key
+or gateway is needed.** The GitHub Pages game does not use live AI.
 
-**Required setup:** deploy `gateway/` with `npx wrangler deploy`, then place its
-public `*.workers.dev` URL in `docs/config.js`. See
-[docs/README.md](docs/README.md) and [gateway/README.md](gateway/README.md).
-Do not publish an API key or blindly trust another person's gateway.
-API usage may be billed to the key owner.
+The existing desktop and localhost versions retain optional live AI functionality.
+See [docs/README.md](docs/README.md) for limitations.
 
 ## Game modes
 
