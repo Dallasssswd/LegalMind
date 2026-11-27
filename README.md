@@ -1,4 +1,4 @@
-# LegalMind v0.5.0 — Desktop + Web
+# LegalMind — Desktop, Local Web, and GitHub Pages v1
 
 Retro-terminal legal simulation game with **Windows desktop** and **local browser web** versions. Both feature AI-generated fictional legal scenarios and interactive courtroom hearings.
 
@@ -19,11 +19,19 @@ The web edition provides AI scenario challenges, courtroom witness questions, AI
 
 **Security:** This is a *localhost-only development web app*, not a deployed public website. Do not expose the Flask development server to the internet. Public hosting requires HTTPS, production deployment, authentication and abuse protections. The OpenAI API can still incur usage charges. Revoke any earlier exposed keys.
 
-## GitHub Pages website (static demo)
+## GitHub Pages website (v1.0 BYOK)
 
-The `docs/` folder is ready for GitHub Pages. Configure **Settings → Pages → Deploy from a branch → main /docs**. When published, the expected address is `https://dallasssswd.github.io/LegalMind/`.
+The `docs/` folder now contains the **live AI** GitHub Pages frontend.
+Visitors can enter their own OpenAI API key in Settings for each browser tab.
+The key is not saved by LegalMind. Cases, witnesses and grading work only after
+an HTTPS Cloudflare Worker API gateway has been deployed. GitHub Pages itself
+cannot run the backend; the gateway code is included in `gateway/`.
 
-**This is an offline practice demo** using sample cases and scripted witness responses. Live OpenAI features still require the separate Flask backend (not supported by GitHub Pages). The repository is currently private, so a GitHub Free account would need to make it public to use Pages; only change visibility if you're comfortable publishing the code. See [docs/README.md](docs/README.md) for details.
+**Required setup:** deploy `gateway/` with `npx wrangler deploy`, then place its
+public `*.workers.dev` URL in `docs/config.js`. See
+[docs/README.md](docs/README.md) and [gateway/README.md](gateway/README.md).
+Do not publish an API key or blindly trust another person's gateway.
+API usage may be billed to the key owner.
 
 ## Game modes
 
