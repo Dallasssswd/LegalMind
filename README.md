@@ -19,16 +19,20 @@ The web edition provides AI scenario challenges, courtroom witness questions, AI
 
 **Security:** This is a *localhost-only development web app*, not a deployed public website. Do not expose the Flask development server to the internet. Public hosting requires HTTPS, production deployment, authentication and abuse protections. The OpenAI API can still incur usage charges. Revoke any earlier exposed keys.
 
-## GitHub Pages website — no setup required
+## GitHub Pages website — practice + optional AI
 
-The `docs/` website is playable immediately at
-[LegalMind Web](https://dallasssswd.github.io/LegalMind/).
-It features built-in fictional scenarios, scripted courtroom witnesses, checklist
-practice feedback, free browser voice, and locally saved XP/archives. **No API key
-or gateway is needed.** The GitHub Pages game does not use live AI.
+The website is published at [LegalMind Web](https://dallasssswd.github.io/LegalMind/).
+The free practice mode runs immediately in a browser, with built-in cases and
+local progress saves. The latest site also supports **optional live OpenAI gameplay**
+using each player's own key, but only when the repository owner has deployed and
+configured the separate HTTPS backend in `gateway/`. Players see a single API
+key field in Settings, never a gateway URL.
 
-The existing desktop and localhost versions retain optional live AI functionality.
-See [docs/README.md](docs/README.md) for limitations.
+**Current repository configuration:** `docs/config.js` has an empty Worker URL,
+so the deployed GitHub Pages site remains in Practice Mode until the owner
+deploys the Worker and configures its public URL. See [docs/README.md](docs/README.md).
+GitHub Pages itself cannot securely provide a direct OpenAI API connection.
+Never commit a user's API key. API usage may be charged separately.
 
 ## Game modes
 
